@@ -1,0 +1,150 @@
+#! env python3
+"""
+wtfw - what the fuck was that one thing
+
+a tool to document the command line utilities i download and think are neat and then forever forget what the fuck they are
+"""
+
+import os
+import json
+import shutil
+import time
+from itertools import chain
+from pathlib import Path
+
+WTFW_RAW_PATH = os.environ.get("WTFW_DATABASE", "~/.local/wtfw.json")
+WTFW_DATA_FILE = Path(WTFW_RAW_PATH).expanduser()
+
+
+def testthing(args):
+  print(args)
+
+
+class Thingaverse:
+  data = None
+  commands = {}
+  _search_terms = {}
+
+  def __init__(self):
+    pass
+
+  def _load_data(self):
+    try:
+      with open(WTFW_DATA_FILE, "r") as f:
+        self.data = json.load(f)
+        self._refresh_calculated_data()
+    except FileNotFoundError:
+      print("No data file found, creating a new one.")
+      self._init_data_file()
+
+  def _refresh_calculated_data(self):
+    if not self.data:
+      self._load_data()
+
+    self.commands = self.data.get("cmds", {})
+    self.search = self.data.get("search", {})
+
+  def _init_data_file(self):
+    print(f"Creating a new data file at {WTFW_DATA_FILE}.")
+    template = {"cmds": {}, "search": {}}
+    with open(WTFW_DATA_FILE, "w") as f:
+      json.dump(template, f)
+
+    self._load_data()
+
+  def _save_data(self):
+    shutil.copy(WTFW_DATA_FILE, f"{WTFW_DATA_FILE}.{str(int(time.time()))}")
+    with open(WTFW_DATA_FILE, "w") as f:
+      json.dump(self.data, f)
+
+  def print_command(self, name):
+    if not self.data:
+      self._load_data()
+
+    thing = self.data["cmds"][name]
+    print(f"{thing['name']}: {thing['desc']}")
+
+  def list(self):
+    if not self.data:
+      self._load_data()
+
+    if not self.commands:
+      print("You have no saved things. Add one with add <thing>")
+      return
+
+    for cmd in sorted(self.commands.keys()):
+      self.print_command(cmd)
+
+  def search(self, search_term):
+    if not self.data:
+      self._load_data()
+
+    search_term = search_term.lower().strip()
+
+    if search_term in self.commands:
+      self.print_command(search_term)
+      return
+
+    if search_term in self.search:
+      relevant_cmds = self.search[search_term]
+      for cmd in sorted(relevant_cmds):
+        self.print_command(cmd)
+      return
+
+  def add(self, args) -> None:
+    if not self.data:
+      self._load_data()
+
+    to_add = args.command
+
+    if to_add.lower() in self.commands:
+      print(f"You already added {to_add}, also you haven't added the ability to edit.")
+      return
+
+    if args.description:
+      desc = args.description
+    else:
+      desc = input(f"Description: ")
+
+    if args.raw_tags:
+      tag_str = args.raw_tags
+    else:
+      tag_str = input(f"Tags: ")
+
+    tags = list(chain.from_iterable([t.split(',') for t in tag_str.split(" ")]))
+    self.data["cmds"][to_add.lower()] = {"name": to_add, "desc": desc, "tags": tags}
+
+    for tag in tags:
+      if tag not in self.search:
+        self.search[tag] = []
+      self.search[tag].append(to_add)
+
+    self._save_data()
+    print("Added!")
+
+
+if __name__ == "__main__":
+  import argparse
+  things = Thingaverse()
+
+  parser = argparse.ArgumentParser(description='What the f* was that thing?')
+  subparsers = parser.add_subparsers(title='subcommands', dest="subcommand")
+
+  add_thing = subparsers.add_parser('add', help='add a thing to the thing list')
+  add_thing.add_argument('command', type=str)
+  add_thing.add_argument('--description', '-d', type=str, default=None, dest='description')
+  add_thing.add_argument('--tags', '-t', type=str, default=None, dest='raw_tags')
+  add_thing.set_defaults(func=lambda args: things.add(args))
+
+  list_things = subparsers.add_parser('list', help='list the things', aliases=['ls'])
+  list_things.set_defaults(func=lambda _: things.list())
+
+  search_things = subparsers.add_parser('search', help='search the things', aliases=['s'])
+  search_things.add_argument('command', type=str)
+  search_things.set_defaults(func=lambda args: things.search(args.command))
+
+  help_with_things = subparsers.add_parser('help', help='show help')
+  help_with_things.set_defaults(func=lambda _: parser.print_help())
+
+  args = parser.parse_args()
+  args.func(args)
