@@ -147,4 +147,8 @@ if __name__ == "__main__":
   help_with_things.set_defaults(func=lambda _: parser.print_help())
 
   args = parser.parse_args()
-  args.func(args)
+  try:
+    args.func(args)
+  except AttributeError:
+    parser.print_help()
+    exit(1)
