@@ -9,6 +9,7 @@ import os
 import json
 import shutil
 import time
+import sys
 from itertools import chain
 from pathlib import Path
 
@@ -91,6 +92,8 @@ class Thingaverse:
         self.print_command(cmd)
       return
 
+    print(f"I got nothin for {search_term}")
+
   def add(self, args) -> None:
     if not self.data:
       self._load_data()
@@ -127,8 +130,9 @@ if __name__ == "__main__":
   import argparse
   things = Thingaverse()
 
-  parser = argparse.ArgumentParser(description='What the f* was that thing?')
+  parser = argparse.ArgumentParser(description='What the f* was that thing?', exit_on_error=False)
   subparsers = parser.add_subparsers(title='subcommands', dest="subcommand")
+  subparsers.default = 'search'
 
   add_thing = subparsers.add_parser('add', help='add a thing to the thing list')
   add_thing.add_argument('command', type=str)
@@ -146,9 +150,17 @@ if __name__ == "__main__":
   help_with_things = subparsers.add_parser('help', help='show help')
   help_with_things.set_defaults(func=lambda _: parser.print_help())
 
-  args = parser.parse_args()
   try:
+    args = parser.parse_args()
     args.func(args)
+  except argparse.ArgumentError as e:
+    # if there's one thing on the command line, assume it's a search
+    # muaahahahaha nobody can stop me from this jank
+    if len(sys.argv) == 2:
+      things.search(sys.argv[1])
+    else:
+      print(str(e))
+      parser.print_help()
   except AttributeError:
     parser.print_help()
     exit(1)
