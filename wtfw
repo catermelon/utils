@@ -17,17 +17,8 @@ WTFW_RAW_PATH = os.environ.get("WTFW_DATABASE", "~/.local/wtfw.json")
 WTFW_DATA_FILE = Path(WTFW_RAW_PATH).expanduser()
 
 
-def testthing(args):
-  print(args)
-
-
 class Colors:
-  HEADER = '\033[95m'
-  OKBLUE = '\033[94m'
-  OKCYAN = '\033[96m'
-  OKGREEN = '\033[92m'
-  WARNING = '\033[93m'
-  FAIL = '\033[91m'
+  GREEN = '\033[92m'
   RESET = '\033[0m'
   BOLD = '\033[1m'
   UNDERLINE = '\033[4m'
@@ -75,7 +66,7 @@ class Thingaverse:
       self._load_data()
 
     thing = self.data["cmds"][name]
-    print(f"👉 {Colors.OKBLUE}{Colors.UNDERLINE}{thing['name']}{Colors.RESET}: {thing['desc']}")
+    print(f"👉 {Colors.GREEN}{Colors.UNDERLINE}{thing['name']}{Colors.RESET}: {thing['desc']}")
 
   def list(self):
     if not self.data:
