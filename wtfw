@@ -21,6 +21,18 @@ def testthing(args):
   print(args)
 
 
+class Colors:
+  HEADER = '\033[95m'
+  OKBLUE = '\033[94m'
+  OKCYAN = '\033[96m'
+  OKGREEN = '\033[92m'
+  WARNING = '\033[93m'
+  FAIL = '\033[91m'
+  RESET = '\033[0m'
+  BOLD = '\033[1m'
+  UNDERLINE = '\033[4m'
+
+
 class Thingaverse:
   data = None
   commands = {}
@@ -63,7 +75,7 @@ class Thingaverse:
       self._load_data()
 
     thing = self.data["cmds"][name]
-    print(f"{thing['name']}: {thing['desc']}")
+    print(f"👉 {Colors.OKBLUE}{Colors.UNDERLINE}{thing['name']}{Colors.RESET}: {thing['desc']}")
 
   def list(self):
     if not self.data:
@@ -134,7 +146,7 @@ if __name__ == "__main__":
   subparsers = parser.add_subparsers(title='subcommands', dest="subcommand")
   subparsers.default = 'search'
 
-  add_thing = subparsers.add_parser('add', help='add a thing to the thing list')
+  add_thing = subparsers.add_parser('add', help='add a thing to the thing list', aliases=['a'])
   add_thing.add_argument('command', type=str)
   add_thing.add_argument('--description', '-d', type=str, default=None, dest='description')
   add_thing.add_argument('--tags', '-t', type=str, default=None, dest='raw_tags')
