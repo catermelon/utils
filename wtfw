@@ -10,6 +10,7 @@ import json
 import shutil
 import time
 import sys
+import subprocess
 from itertools import chain
 from pathlib import Path
 
@@ -129,6 +130,13 @@ class Thingaverse:
     print("Added!")
 
 
+def durf_it():
+  orig = WTFW_DATA_FILE.resolve().parent
+  print("durfin it")
+  print(f"original: {orig}")
+  subprocess.run(["git", "commit", "-a", "-m", "automatic commit"], cwd=orig)
+
+
 if __name__ == "__main__":
   import argparse
   things = Thingaverse()
@@ -152,6 +160,9 @@ if __name__ == "__main__":
 
   help_with_things = subparsers.add_parser('help', help='show help')
   help_with_things.set_defaults(func=lambda _: parser.print_help())
+
+  durf = subparsers.add_parser('durf', help='show durf')
+  durf.set_defaults(func=lambda _: durf_it())
 
   try:
     args = parser.parse_args()
