@@ -134,7 +134,11 @@ def durf_it():
   orig = WTFW_DATA_FILE.resolve().parent
   print("durfin it")
   print(f"original: {orig}")
-  subprocess.run(["git", "commit", "-a", "-m", "automatic commit"], cwd=orig)
+  try:
+    subprocess.run(["git", "commit", "-a", "-m", "automatic commit"], cwd=orig, check=True)
+    subprocess.run(["git", "push"], cwd=orig, check=True)
+  except subprocess.CalledProcessError:
+    print(f"git push failed at {orig}")
 
 
 if __name__ == "__main__":
