@@ -24,6 +24,19 @@ class Colors:
   BOLD = '\033[1m'
   UNDERLINE = '\033[4m'
 
+def update_repo():
+  orig = WTFW_DATA_FILE.resolve().parent
+  subprocess.Popen(["git", "pull"], cwd=orig, stdout=subprocess.DEVNULL)
+
+def save_to_repo():
+  print("Saving....")
+  orig = WTFW_DATA_FILE.resolve().parent
+  try:
+    subprocess.run(["git", "commit", "-a", "-m", "automatic commit"], cwd=orig, stdout=subprocess.DEVNULL)
+    subprocess.run(["git", "push"], cwd=orig, check=True)
+  except subprocess.CalledProcessError(e):
+    print(f"git push failed at {orig}: {e}")
+
 
 class Thingaverse:
   data = None
@@ -58,9 +71,10 @@ class Thingaverse:
     self._load_data()
 
   def _save_data(self):
-    shutil.copy(WTFW_DATA_FILE, f"{WTFW_DATA_FILE}.{str(int(time.time()))}")
     with open(WTFW_DATA_FILE, "w") as f:
       json.dump(self.data, f)
+
+    save_to_repo()
 
   def print_command(self, name):
     if not self.data:
@@ -130,27 +144,6 @@ class Thingaverse:
     print("Added!")
 
 
-def dorf_it():
-  orig = WTFW_DATA_FILE.resolve().parent
-  print("dorfin it")
-  print(f"original: {orig}")
-  try:
-    subprocess.run(["git", "pull"], cwd=orig, check=True)
-  except subprocess.CalledProcessError:
-    print(f"git pull failed at {orig}")
-
-
-def durf_it():
-  orig = WTFW_DATA_FILE.resolve().parent
-  print("durfin it")
-  print(f"original: {orig}")
-  try:
-    subprocess.run(["git", "commit", "-a", "-m", "automatic commit"], cwd=orig, check=True)
-    subprocess.run(["git", "push"], cwd=orig, check=True)
-  except subprocess.CalledProcessError:
-    print(f"git push failed at {orig}")
-
-
 if __name__ == "__main__":
   import argparse
   things = Thingaverse()
@@ -175,11 +168,11 @@ if __name__ == "__main__":
   help_with_things = subparsers.add_parser('help', help='show help')
   help_with_things.set_defaults(func=lambda _: parser.print_help())
 
-  durf = subparsers.add_parser('durf', help='show durf')
-  durf.set_defaults(func=lambda _: durf_it())
+  durf = subparsers.add_parser('durf', help='show push durf')
+  durf.set_defaults(func=lambda _: save_to_repo())
 
-  dorf = subparsers.add_parser('dorf', help='show dorf')
-  dorf.set_defaults(func=lambda _: dorf_it())
+  dorf = subparsers.add_parser('dorf', help='show pull dorf')
+  dorf.set_defaults(func=lambda _: update_repo())
 
   try:
     args = parser.parse_args()
@@ -195,3 +188,5 @@ if __name__ == "__main__":
   except AttributeError:
     parser.print_help()
     exit(1)
+  finally:
+    update_repo()
