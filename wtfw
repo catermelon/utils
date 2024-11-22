@@ -130,6 +130,16 @@ class Thingaverse:
     print("Added!")
 
 
+def dorf_it():
+  orig = WTFW_DATA_FILE.resolve().parent
+  print("dorfin it")
+  print(f"original: {orig}")
+  try:
+    subprocess.run(["git", "pull"], cwd=orig, check=True)
+  except subprocess.CalledProcessError:
+    print(f"git pull failed at {orig}")
+
+
 def durf_it():
   orig = WTFW_DATA_FILE.resolve().parent
   print("durfin it")
@@ -167,6 +177,9 @@ if __name__ == "__main__":
 
   durf = subparsers.add_parser('durf', help='show durf')
   durf.set_defaults(func=lambda _: durf_it())
+
+  dorf = subparsers.add_parser('dorf', help='show dorf')
+  dorf.set_defaults(func=lambda _: dorf_it())
 
   try:
     args = parser.parse_args()
