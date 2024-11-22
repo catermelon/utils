@@ -32,11 +32,11 @@ def save_to_repo():
   print("Saving....")
   orig = WTFW_DATA_FILE.resolve().parent
   try:
-    subprocess.run(["git", "commit", "-a", "-m", "automatic commit"], cwd=orig, stdout=subprocess.DEVNULL)
-    subprocess.run(["git", "push"], cwd=orig, check=True)
+    subprocess.run(["git", "commit", "-a", "-m", "automatic commit"], cwd=orig, check=True, stdout=subprocess.DEVNULL)
+    subprocess.run(["git", "push"], cwd=orig, check=True, stdout=subprocess.DEVNULL)
+    print("Done.")
   except subprocess.CalledProcessError(e):
     print(f"git push failed at {orig}: {e}")
-
 
 class Thingaverse:
   data = None
