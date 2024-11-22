@@ -7,12 +7,11 @@ a tool to document the command line utilities i download and think are neat and 
 
 import os
 import json
-import shutil
-import time
 import sys
 import subprocess
 from itertools import chain
 from pathlib import Path
+import textwrap
 
 WTFW_RAW_PATH = os.environ.get("WTFW_DATABASE", "~/.local/wtfw.json")
 WTFW_DATA_FILE = Path(WTFW_RAW_PATH).expanduser()
@@ -23,6 +22,8 @@ class Colors:
   RESET = '\033[0m'
   BOLD = '\033[1m'
   UNDERLINE = '\033[4m'
+  REVERSE = '\033[7m'
+  HEADER = '\033[32m'
 
 def update_repo():
   orig = WTFW_DATA_FILE.resolve().parent
@@ -41,7 +42,9 @@ def save_to_repo():
 class Thingaverse:
   data = None
   commands = {}
+  categories = {}
   _search_terms = {}
+
 
   def __init__(self):
     pass
@@ -61,10 +64,11 @@ class Thingaverse:
 
     self.commands = self.data.get("cmds", {})
     self.search = self.data.get("search", {})
+    self.categories = self.data.get("categories", {})
 
   def _init_data_file(self):
     print(f"Creating a new data file at {WTFW_DATA_FILE}.")
-    template = {"cmds": {}, "search": {}}
+    template = {"cmds": {}, "search": {}, "categories": {}}
     with open(WTFW_DATA_FILE, "w") as f:
       json.dump(template, f)
 
@@ -83,16 +87,33 @@ class Thingaverse:
     thing = self.data["cmds"][name]
     print(f"👉 {Colors.GREEN}{Colors.UNDERLINE}{thing['name']}{Colors.RESET}: {thing['desc']}")
 
-  def list(self):
+  def list(self, verbose=False):
     if not self.data:
       self._load_data()
 
     if not self.commands:
       print("You have no saved things. Add one with add <thing>")
       return
+    
+    for cat in sorted(self.categories.keys()):
+      name = self.categories[cat]
+      print(f"{Colors.REVERSE}{Colors.HEADER}{name}{Colors.RESET}")
 
-    for cmd in sorted(self.commands.keys()):
-      self.print_command(cmd)
+      to_print = []
+      for cmd in sorted(self.commands.keys()):
+        if self.commands[cmd]["category"] == cat:
+          to_print.append(cmd)
+
+      if verbose:
+        for cmd in to_print:
+          self.print_command(cmd)
+
+        print("\n", end="")
+        
+      else:
+        print("  ".join([f"{Colors.GREEN}{Colors.UNDERLINE}{cmd}{Colors.RESET}" for cmd in to_print]), end="\n\n")
+
+      
 
   def search(self, search_term):
     if not self.data:
@@ -121,6 +142,15 @@ class Thingaverse:
     if to_add.lower() in self.commands:
       print(f"You already added {to_add}, also you haven't added the ability to edit.")
       return
+    
+    if args.category:
+      category = args.category
+    else:
+      category = input(f"Category: ")
+
+    if category not in self.categories:
+      print("Invalid category. Make this better if you get annoyed lol")
+      return
 
     if args.description:
       desc = args.description
@@ -133,7 +163,9 @@ class Thingaverse:
       tag_str = input(f"Tags: ")
 
     tags = list(chain.from_iterable([t.split(',') for t in tag_str.split(" ")]))
-    self.data["cmds"][to_add.lower()] = {"name": to_add, "desc": desc, "tags": tags}
+
+    # assemble the thing
+    self.data["cmds"][to_add.lower()] = {"name": to_add, "category": category, "desc": desc, "tags": tags}
 
     for tag in tags:
       if tag not in self.search:
@@ -155,11 +187,13 @@ if __name__ == "__main__":
   add_thing = subparsers.add_parser('add', help='add a thing to the thing list', aliases=['a'])
   add_thing.add_argument('command', type=str)
   add_thing.add_argument('--description', '-d', type=str, default=None, dest='description')
+  add_thing.add_argument('--category', '-c', type=str, default=None, dest='category')
   add_thing.add_argument('--tags', '-t', type=str, default=None, dest='raw_tags')
   add_thing.set_defaults(func=lambda args: things.add(args))
 
   list_things = subparsers.add_parser('list', help='list the things', aliases=['ls'])
-  list_things.set_defaults(func=lambda _: things.list())
+  list_things.add_argument("--verbose", "-v", action="store_true", dest="verbose")
+  list_things.set_defaults(func=lambda args: things.list(args.verbose))
 
   search_things = subparsers.add_parser('search', help='search the things', aliases=['s'])
   search_things.add_argument('command', type=str)
