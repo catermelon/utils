@@ -1,0 +1,11 @@
+7zz.darwin filter=lfs diff=lfs merge=lfs -text
+rclone.darwin filter=lfs diff=lfs merge=lfs -text
+*.yapf filter=lfs diff=lfs merge=lfs -text
+*.json filter=lfs diff=lfs merge=lfs -text
+*.darwin filter=lfs diff=lfs merge=lfs -text
+*.md filter=lfs diff=lfs merge=lfs -text
+/mksecret filter=lfs diff=lfs merge=lfs -text
+/rename filter=lfs diff=lfs merge=lfs -text
+*.zip filter=lfs diff=lfs merge=lfs -text
+*.terminal filter=lfs diff=lfs merge=lfs -text
+/wtfw filter=lfs diff=lfs merge=lfs -text
