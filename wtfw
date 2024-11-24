@@ -87,7 +87,7 @@ class Thingaverse:
     thing = self.data["cmds"][name]
     print(f"👉 {Colors.GREEN}{Colors.UNDERLINE}{thing['name']}{Colors.RESET}: {thing['desc']}")
 
-  def list(self, verbose=False):
+  def list(self, terse=False):
     if not self.data:
       self._load_data()
 
@@ -95,7 +95,7 @@ class Thingaverse:
       print("You have no saved things. Add one with add <thing>")
       return
     
-    for cat in sorted(self.categories.keys()):
+    for cat in self.categories.keys():
       name = self.categories[cat]
       print(f"{Colors.REVERSE}{Colors.HEADER}{name}{Colors.RESET}")
 
@@ -104,16 +104,13 @@ class Thingaverse:
         if self.commands[cmd]["category"] == cat:
           to_print.append(cmd)
 
-      if verbose:
+      if terse:
+        print("  ".join([f"{Colors.GREEN}{Colors.UNDERLINE}{cmd}{Colors.RESET}" for cmd in to_print]), end="\n\n")
+      else:
         for cmd in to_print:
           self.print_command(cmd)
 
         print("\n", end="")
-        
-      else:
-        print("  ".join([f"{Colors.GREEN}{Colors.UNDERLINE}{cmd}{Colors.RESET}" for cmd in to_print]), end="\n\n")
-
-      
 
   def search(self, search_term):
     if not self.data:
@@ -192,8 +189,8 @@ if __name__ == "__main__":
   add_thing.set_defaults(func=lambda args: things.add(args))
 
   list_things = subparsers.add_parser('list', help='list the things', aliases=['ls'])
-  list_things.add_argument("--verbose", "-v", action="store_true", dest="verbose")
-  list_things.set_defaults(func=lambda args: things.list(args.verbose))
+  list_things.add_argument("--terse", "-t", action="store_true", dest="terse")
+  list_things.set_defaults(func=lambda args: things.list(args.terse))
 
   search_things = subparsers.add_parser('search', help='search the things', aliases=['s'])
   search_things.add_argument('command', type=str)
