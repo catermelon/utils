@@ -143,7 +143,7 @@ class Thingaverse:
     if args.category:
       category = args.category
     else:
-      print("Categories: ", ", ".join(self.categories.values()))
+      print("Categories: ", ", ".join(self.categories.keys()))
       category = input(f"Category: ")
 
     if category not in self.categories:
