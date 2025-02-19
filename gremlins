@@ -1,0 +1,14 @@
+#!/bin/bash
+
+if [ -p /dev/stdin ]; then
+    while IFS= read line; do
+        perl -ne 'print if /[^[:ascii:]]/' $line
+    done
+else
+    # Checking to ensure a filename was specified and that it exists
+    if [ -f "$1" ]; then
+        perl -ne 'print if /[^[:ascii:]]/' ${1}
+    else
+        echo "No input given."
+    fi
+fi
